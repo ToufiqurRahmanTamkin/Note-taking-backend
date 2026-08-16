@@ -18,15 +18,8 @@ const postSchema = new Schema<IPost>(
   { timestamps: true }
 );
 
-/**
- * INDEX (single, required by the $lookup aggregation).
- *
- * { author: 1 }: Scenario 2 retrieves all posts belonging to a particular
- * user via a $lookup from users -> posts. MongoDB resolves that join using an
- * index on the FOREIGN field (posts.author); this index makes the lookup an
- * index seek instead of a per-parent collection scan. Posts are visible to
- * everyone, so there is no per-owner access filter needing anything more.
- */
+// { author }: resolves the Scenario 2 $lookup (users -> posts) via an index
+// seek on the foreign field. The only index posts need.
 postSchema.index({ author: 1 });
 
 export const Post = model<IPost>('Post', postSchema);

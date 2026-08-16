@@ -18,22 +18,12 @@ const noteSchema = new Schema<INote>(
   { timestamps: true }
 );
 
-/**
- * INDEXES (minimal set for the two list views on notes).
- *
- * 1) { owner: 1, createdAt: -1 }: serves a user listing THEIR OWN notes,
- *    paginated and sorted newest-first. The same compound index also covers
- *    fetching a single note filtered by owner (ownership-checked reads),
- *    so no separate index on `owner` alone is needed.
- */
+// Indexes (minimal set for the two list views on notes).
+// { owner, createdAt }: a user listing their own notes, newest-first; the
+// prefix also covers ownership-checked single-note reads.
 noteSchema.index({ owner: 1, createdAt: -1 });
-
-/**
- * 2) { createdAt: -1 }: serves the admin "view everyone's notes" list, which
- *    has no owner filter and is sorted newest-first. The compound index above
- *    cannot serve a sort that isn't prefixed by `owner`, so this one is
- *    genuinely required for the admin global feed.
- */
+// { createdAt }: admin "view everyone's notes" — no owner filter, so the
+// compound index above can't serve this sort.
 noteSchema.index({ createdAt: -1 });
 
 export const Note = model<INote>('Note', noteSchema);

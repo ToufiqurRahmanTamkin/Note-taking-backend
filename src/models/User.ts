@@ -23,7 +23,7 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
-    // Never selected by default so it can't leak through generic queries.
+    // select:false so the hash never leaks through ordinary queries.
     password: { type: String, required: true, select: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     interests: { type: [String], default: [] },
@@ -31,28 +31,13 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-/**
- * INDEXES (kept intentionally minimal — see task's efficiency constraint).
- *
- * 1) email (unique): supports login lookups (findOne by email) and enforces
- *    uniqueness on registration. This is the only single-document read path
- *    on users that isn't the primary key, so it must be indexed.
- */
+// Indexes (minimal by design — see the efficiency constraint).
+// email (unique): login lookup + uniqueness on registration.
 userSchema.index({ email: 1 }, { unique: true });
-
-/**
- * 2) createdAt: supports the admin "list all users" view, which is paginated
- *    and sorted by newest-first. Without it that sort would be an in-memory
- *    sort of the whole collection.
- */
+// createdAt: admin "list all users", paginated and sorted newest-first.
 userSchema.index({ createdAt: -1 });
-
-/**
- * 3) interests (multikey): supports the "group users by interests" aggregation.
- *    The pipeline scans/unwinds the interests array; this multikey index lets
- *    that stage be served from an index instead of a full collection scan.
- *    (GET a single user profile uses the default _id index — no extra index.)
- */
+// interests (multikey): backs the "group users by interests" aggregation.
+// (Single-user reads use the default _id index — no extra index needed.)
 userSchema.index({ interests: 1 });
 
 // Hash the password whenever it is set/changed.
