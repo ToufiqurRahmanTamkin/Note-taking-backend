@@ -46,10 +46,14 @@ export const usersByInterest = async (
  *
  * Constraint: a SINGLE aggregation pipeline using a $lookup stage. The join
  * is resolved through the { author: 1 } index on the posts collection.
+ *
+ * Private posts are only included in the join when the requester is the
+ * owner or an admin; everyone else only sees that user's public posts.
  */
 export const userPosts = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = new Types.ObjectId(req.params.id);
+    const canSeePrivate = req.user!.role === 'admin' || req.user!.id === req.params.id;
 
     const result = await User.aggregate([
       { $match: { _id: userId } },
@@ -59,6 +63,7 @@ export const userPosts = async (req: AuthRequest, res: Response, next: NextFunct
           localField: '_id',
           foreignField: 'author',
           as: 'posts',
+          pipeline: canSeePrivate ? [] : [{ $match: { privacy: 'public' } }],
         },
       },
       {
@@ -71,7 +76,13 @@ export const userPosts = async (req: AuthRequest, res: Response, next: NextFunct
             $map: {
               input: '$posts',
               as: 'p',
-              in: { id: '$$p._id', title: '$$p.title', body: '$$p.body', createdAt: '$$p.createdAt' },
+              in: {
+                id: '$$p._id',
+                title: '$$p.title',
+                body: '$$p.body',
+                privacy: '$$p.privacy',
+                createdAt: '$$p.createdAt',
+              },
             },
           },
         },

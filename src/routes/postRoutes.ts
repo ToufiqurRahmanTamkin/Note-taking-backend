@@ -1,9 +1,12 @@
 import { Router } from 'express';
-import { createPost } from '../controllers/postController';
+import { createPost, listPosters } from '../controllers/postController';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.post('/', authenticate, createPost);
+router.use(authenticate);
+
+router.post('/', createPost);
+router.get('/posters', listPosters);
 
 export default router;

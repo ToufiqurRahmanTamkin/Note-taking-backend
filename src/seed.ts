@@ -45,9 +45,11 @@ const seed = async () => {
   ]);
 
   await Post.create([
-    { title: 'Why I love chess', body: 'A public post by Alice.', author: alice._id },
-    { title: 'Best books of the year', body: 'A public post by Bob.', author: bob._id },
-    { title: 'Reading habits', body: 'Another public post by Bob.', author: bob._id },
+    { title: 'Why I love chess', body: 'A public post by Alice.', author: alice._id, privacy: 'public' },
+    { title: "Alice's private thoughts", body: 'Only Alice (and admins) can see this.', author: alice._id, privacy: 'private' },
+    { title: 'Best books of the year', body: 'A public post by Bob.', author: bob._id, privacy: 'public' },
+    { title: 'Reading habits', body: 'Another public post by Bob.', author: bob._id, privacy: 'public' },
+    { title: "Bob's draft", body: 'Not ready to share yet.', author: bob._id, privacy: 'private' },
   ]);
 
   console.log('Seed complete.');
